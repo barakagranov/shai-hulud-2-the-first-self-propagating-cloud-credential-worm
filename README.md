@@ -138,31 +138,53 @@ The `setup.sh` script handles: prerequisite checks across 10+ tools, cloud crede
 ```bash
 cd core
 
-python main.py                 # Interactive menu (pick phases)
+python main.py                 # Interactive step-level menu
 python main.py --auto          # Full automated attack chain
+python main.py --auto --fresh  # Clear progress and run from scratch
 python main.py --manual        # Print SSH commands for manual execution
 python main.py --auto --log    # Attack with structured logging
 python main.py status          # Check lab environment health
 python main.py report          # Generate report from last log
 ```
 
+In interactive mode, you can run individual steps (`2.1`), entire phases (`2` or `p2`), or everything (`all`). Steps marked DONE are tracked across restarts.
+
 ---
 
-## Cleanup
+## Cleanup & Reset
+
+### Re-run the attack (keep infrastructure)
 
 ```bash
-# Automated cleanup (GitHub repos + runner + Verdaccio + Terraform + local)
-./cleanup.sh
+# Soft reset: deletes GitHub repos, resets Verdaccio, clears progress (~15 seconds)
+./reset.sh
+
+# Then re-run
+source .venv/bin/activate
+export GITHUB_PAT="ghp_..."  # reset.sh prints the exact commands
+export GITHUB_USERNAME="..."
+export VICTIM_NPM_TOKEN="..."  # new token printed by reset.sh
+cd core && python main.py
 ```
 
-**Manual verification checklist** (check in each cloud console):
+`reset.sh` keeps Terraform VMs running (saves 5-10 minutes of redeploy). It resets Verdaccio to clean packages, deletes GitHub repos, stops the runner, and clears all worm artifacts.
 
-- AWS: No EC2 instances, IAM roles, secrets, SSM params, or key pairs with your prefix
-- Azure: Resource group deleted; check "Deleted vaults" in Key Vault and purge
-- GCP: No Compute Engine instances, service accounts, or secrets with your prefix
-- GitHub: Both lab repos deleted; no self-hosted runners registered
-- Docker: Verdaccio container stopped and removed
-- Local: `~/.shai-hulud-*` and `~/.bun` directories removed
+### Full teardown
+
+```bash
+# Remove everything: GitHub repos + runner + Verdaccio + Terraform + local artifacts
+./cleanup.sh
+
+# Then verify nothing is left
+./verify.sh
+
+# Finally, clear env vars in your shell (cleanup.sh cannot do this for you)
+unset GITHUB_PAT GITHUB_USERNAME VICTIM_NPM_TOKEN WORM_EXFIL_DIR WORM_DRY_RUN
+```
+
+`cleanup.sh` takes 5-10 minutes (Azure Key Vault soft-delete/purge is slow). It deletes all cloud resources, GitHub repos, the runner, Verdaccio container and storage, and local artifacts.
+
+`verify.sh` checks ~30 items across all three clouds, GitHub, Docker, local filesystem, npm config, processes, and environment variables. Each check shows PASS/FAIL/WARN with the actual finding and the fix command.
 
 ---
 
@@ -225,6 +247,8 @@ shai-hulud-2/
 +-- README.md                        # This file
 +-- setup.sh                         # One-command multi-cloud setup
 +-- cleanup.sh                       # Complete multi-cloud teardown
++-- reset.sh                         # Soft reset (keep infra, re-run attack)
++-- verify.sh                        # Post-cleanup verification (~30 checks)
 +-- requirements.txt                 # Python dependencies
 +-- terraform/                       # Infrastructure as code (3 clouds)
 |   +-- providers.tf                 # AWS + Azure + GCP provider config
