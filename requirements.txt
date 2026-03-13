@@ -1,0 +1,30 @@
+# =============================================================================
+# Python Dependencies for Shai-Hulud 2.0 Supply Chain Worm Simulation
+# =============================================================================
+# Install: pip install -r requirements.txt
+# Versions pinned to latest stable as of March 2026.
+# =============================================================================
+
+# AWS SDK
+boto3>=1.34.0
+
+# Azure SDKs (for Key Vault secret access and identity)
+azure-identity>=1.19.0
+azure-keyvault-secrets>=4.9.0
+azure-mgmt-resource>=23.2.0
+
+# GCP SDKs (for Secret Manager access)
+google-cloud-secret-manager>=2.21.0
+google-auth>=2.36.0
+
+# SSH for connecting to cloud VMs
+paramiko>=3.5.0
+
+# Terminal output (colored text, tables, progress bars)
+rich>=13.9.0
+
+# HTTP requests (GitHub API, Verdaccio API, metadata endpoints)
+requests>=2.32.0
+
+# Encryption (GitHub repository secret encryption via libsodium)
+PyNaCl>=1.5.0

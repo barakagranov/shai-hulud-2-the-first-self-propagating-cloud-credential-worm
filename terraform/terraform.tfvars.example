@@ -1,0 +1,30 @@
+# =============================================================================
+# LAB CONFIGURATION -- Shai-Hulud 2.0
+# =============================================================================
+# Copy this file to terraform.tfvars and fill in your values:
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# IMPORTANT: Use DEDICATED LAB ACCOUNTS on all three clouds.
+# NEVER run this against production infrastructure.
+# =============================================================================
+
+# Your initials or a short prefix (keeps resource names unique)
+project_prefix = "sh2"
+
+# AWS region (us-east-1 recommended -- cheapest, most services)
+aws_region = "us-east-1"
+
+# Azure subscription ID
+# Find with: az account show --query id --output tsv
+azure_subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# Azure region (eastus recommended)
+azure_location = "eastus"
+
+# GCP project ID
+# Find with: gcloud config get project
+gcp_project_id = "your-gcp-project-id"
+
+# GCP region and zone
+gcp_region = "us-central1"
+gcp_zone   = "us-central1-a"

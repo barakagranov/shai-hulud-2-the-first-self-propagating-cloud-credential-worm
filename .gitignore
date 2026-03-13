@@ -1,0 +1,66 @@
+# =============================================================================
+# Shai-Hulud 2.0 Lab -- .gitignore
+# =============================================================================
+
+# --- Terraform ---
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/terraform.tfvars
+terraform/*.tfplan
+terraform/lab-key.pem
+terraform/.terraform.tfstate.lock.info
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# --- Runtime outputs ---
+logs/*.jsonl
+logs/*.log
+reports/*.md
+reports/*.html
+attack/payloads/*.tgz
+progress.json
+
+# --- Secrets / credentials (NEVER commit) ---
+*.pem
+*.key
+*credentials*
+*.env
+.npmrc
+
+# --- OS artifacts ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# --- IDE ---
+.vscode/
+.idea/
+*.iml
+
+# --- npm / node (from Verdaccio interaction) ---
+node_modules/
+package-lock.json
+
+# --- Bun (installed by dropper) ---
+.bun/
+
+# --- Exfiltration directories (created by payload) ---
+.shai-hulud-exfil/
+.shai-hulud-cascade-demo/
+.shai-hulud-runner/
+
+# --- GitHub Actions runner ---
+actions-runner/
