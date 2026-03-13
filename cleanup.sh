@@ -158,7 +158,8 @@ echo -e "  ${GREEN}npm config cleaned${NC}"
 TF_DESTROY_SUCCESS=false
 
 echo -e "\n${CYAN}[4/8] Running terraform destroy (AWS + Azure + GCP)...${NC}"
-echo -e "  ${YELLOW}This removes infrastructure from all three clouds. Takes 3-5 minutes.${NC}"
+echo -e "  ${YELLOW}This removes infrastructure from all three clouds.${NC}"
+echo -e "  ${YELLOW}Takes 5-10 minutes (Azure Key Vault soft-delete/purge is slow).${NC}"
 
 if [ -f "${TERRAFORM_DIR}/terraform.tfstate" ]; then
     cd "${TERRAFORM_DIR}"
