@@ -143,16 +143,24 @@ else
     if curl -sf http://localhost:4873/-/ping &>/dev/null; then
         echo -e "  ${GREEN}Verdaccio restarted with fresh storage${NC}"
 
-        # Re-register user
+        # Re-register user via Verdaccio REST API (npm adduser is interactive in npm 10+)
         echo -e "  Re-registering npm user (novatech-bot)..."
-        # Remove old token first
         sed -i '/localhost:4873/d' ~/.npmrc 2>/dev/null || true
-        npm adduser --registry http://localhost:4873 <<EOF 2>/dev/null
-novatech-bot
-novatech123
-bot@novatech.dev
-EOF
-        npm config set @novatech:registry http://localhost:4873
+
+        AUTH_RESPONSE=$(curl -s -X PUT \
+            -H "Content-Type: application/json" \
+            -d '{"name":"novatech-bot","password":"novatech123","email":"bot@novatech.dev"}' \
+            "http://localhost:4873/-/user/org.couchdb.user:novatech-bot" 2>/dev/null)
+
+        NEW_NPM_TOKEN=$(echo "${AUTH_RESPONSE}" | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))" 2>/dev/null)
+
+        if [ -n "${NEW_NPM_TOKEN}" ] && [ "${NEW_NPM_TOKEN}" != "" ]; then
+            echo "//localhost:4873/:_authToken=\"${NEW_NPM_TOKEN}\"" >> ~/.npmrc
+            npm config set @novatech:registry http://localhost:4873
+            echo -e "  ${GREEN}Verdaccio user registered and token saved${NC}"
+        else
+            echo -e "  ${RED}Failed to register Verdaccio user. Try manually: npm adduser --registry http://localhost:4873${NC}"
+        fi
 
         # Republish clean packages
         TEMP_DIR=$(mktemp -d)
@@ -185,7 +193,7 @@ PKGJSON
         rm -rf "${TEMP_DIR}"
 
         # Update VICTIM_NPM_TOKEN
-        NEW_TOKEN=$(grep "localhost:4873" ~/.npmrc 2>/dev/null | sed 's/.*_authToken=//' | sed 's/"//g')
+        NEW_TOKEN=$(grep "localhost:4873" ~/.npmrc 2>/dev/null | grep "_authToken" | sed 's/.*_authToken=//' | sed 's/"//g')
         if [ -n "${NEW_TOKEN}" ]; then
             echo -e "  ${GREEN}New npm token available${NC}"
             echo -e "  ${YELLOW}Run: export VICTIM_NPM_TOKEN=${NEW_TOKEN}${NC}"
@@ -257,6 +265,6 @@ echo -e "  ${YELLOW}Next steps:${NC}"
 echo -e "  ${CYAN}source .venv/bin/activate${NC}"
 echo -e "  ${CYAN}export GITHUB_PAT=${GITHUB_PAT}${NC}"
 echo -e "  ${CYAN}export GITHUB_USERNAME=${GITHUB_USERNAME}${NC}"
-NEW_TOKEN=$(grep "localhost:4873" ~/.npmrc 2>/dev/null | sed 's/.*_authToken=//' | sed 's/"//g')
+NEW_TOKEN=$(grep "localhost:4873" ~/.npmrc 2>/dev/null | grep "_authToken" | sed 's/.*_authToken=//' | sed 's/"//g')
 echo -e "  ${CYAN}export VICTIM_NPM_TOKEN=${NEW_TOKEN}${NC}"
 echo -e "  ${CYAN}cd core && python main.py${NC}"
