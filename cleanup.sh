@@ -213,9 +213,17 @@ rm -rf ~/.shai-hulud-exfil 2>/dev/null && echo -e "  ${GREEN}Removed ~/.shai-hul
 rm -rf ~/.shai-hulud-cascade-demo 2>/dev/null && echo -e "  ${GREEN}Removed cascade demo${NC}" || true
 rm -rf ~/.bun 2>/dev/null && echo -e "  ${GREEN}Removed Bun runtime${NC}" || true
 
+# Remove trufflehog if installed by the worm payload
+if [ -f /usr/local/bin/trufflehog ]; then
+    sudo rm -f /usr/local/bin/trufflehog 2>/dev/null && \
+        echo -e "  ${GREEN}Removed /usr/local/bin/trufflehog${NC}" || \
+        echo -e "  ${YELLOW}Could not remove trufflehog (try: sudo rm /usr/local/bin/trufflehog)${NC}"
+fi
+
 # Kill any lingering bun/trufflehog processes
 pkill -f "bun_environment" 2>/dev/null || true
 pkill -f "trufflehog" 2>/dev/null || true
+pkill -f "setup_bun" 2>/dev/null || true
 
 echo -e "  ${GREEN}Worm artifacts cleaned${NC}"
 
@@ -223,61 +231,44 @@ echo -e "  ${GREEN}Worm artifacts cleaned${NC}"
 # [7/8] CLEAR ENVIRONMENT VARIABLES
 # =============================================================================
 
-echo -e "\n${CYAN}[7/8] Clearing environment variables...${NC}"
-
-# Note: these only affect the current shell session
-unset GITHUB_PAT GITHUB_USERNAME VICTIM_NPM_TOKEN 2>/dev/null || true
-unset WORM_EXFIL_DIR WORM_DRY_RUN WORM_REGISTRY WORM_NPM_TOKEN 2>/dev/null || true
+echo -e "\n${CYAN}[7/8] Environment variables...${NC}"
 
 # Clean AWS CLI attacker profiles
 for PROFILE in attacker attacker-admin; do
     aws configure set aws_access_key_id "" --profile "${PROFILE}" 2>/dev/null || true
     aws configure set aws_secret_access_key "" --profile "${PROFILE}" 2>/dev/null || true
 done
-echo -e "  ${GREEN}Environment cleaned${NC}"
+echo -e "  ${GREEN}Cleared AWS CLI attacker profiles${NC}"
+
+# We CANNOT unset env vars in the parent shell from a child script.
+# Print the commands for the user to copy-paste.
+echo ""
+echo -e "  ${YELLOW}IMPORTANT: Run these commands in your terminal to clear env vars:${NC}"
+echo ""
+echo -e "  ${CYAN}unset GITHUB_PAT GITHUB_USERNAME VICTIM_NPM_TOKEN WORM_EXFIL_DIR WORM_DRY_RUN${NC}"
+echo ""
 
 # =============================================================================
 # [8/8] VERIFICATION CHECKLIST
 # =============================================================================
 
-echo -e "\n${CYAN}[8/8] Verification checklist${NC}"
-echo -e "${YELLOW}"
-echo "  Verify in each cloud console:"
-echo ""
-echo "  AWS:"
-echo "    [ ] EC2: No instances with your prefix"
-echo "    [ ] IAM: No roles/profiles with your prefix"
-echo "    [ ] Secrets Manager: No secrets with your prefix"
-echo "    [ ] SSM: No parameters with your prefix"
-echo "    [ ] Key Pairs: No pairs with your prefix"
-echo ""
-echo "  Azure:"
-echo "    [ ] Resource Groups: Lab RG deleted"
-echo "    [ ] Key Vault: Check 'Deleted vaults' and purge if needed"
-echo ""
-echo "  GCP:"
-echo "    [ ] Compute Engine: No instances with your prefix"
-echo "    [ ] Service Accounts: No SAs with your prefix"
-echo "    [ ] Secret Manager: No secrets with your prefix"
-echo ""
-echo "  GitHub:"
-echo "    [ ] Both lab repos deleted (novatech-oss-tools-lab, shai-hulud-c2-*)"
-echo "    [ ] No self-hosted runners (Settings > Actions > Runners)"
-echo ""
-echo "  Local:"
-echo "    [ ] ~/.shai-hulud-* directories removed"
-echo "    [ ] ~/.bun directory removed"
-echo "    [ ] ~/.npmrc has no Verdaccio tokens"
-echo "    [ ] No bun or trufflehog processes: ps aux | grep -E 'bun|trufflehog'"
-echo -e "${NC}"
+echo -e "\n${CYAN}[8/8] Verification${NC}"
 
 if [ ${ERRORS} -gt 0 ]; then
     echo -e "${YELLOW}=============================================${NC}"
     echo -e "${YELLOW}  Cleanup finished with ${ERRORS} warning(s).${NC}"
-    echo -e "${YELLOW}  Check the output above and verify manually.${NC}"
+    echo -e "${YELLOW}  Check the output above for details.${NC}"
     echo -e "${YELLOW}=============================================${NC}"
 else
     echo -e "${GREEN}=============================================${NC}"
     echo -e "${GREEN}  Cleanup Complete!${NC}"
     echo -e "${GREEN}=============================================${NC}"
 fi
+
+echo ""
+echo -e "  ${YELLOW}Run the verification script to confirm everything is gone:${NC}"
+echo -e "  ${CYAN}./verify.sh${NC}"
+echo ""
+echo -e "  ${YELLOW}Then clear your environment variables:${NC}"
+echo -e "  ${CYAN}unset GITHUB_PAT GITHUB_USERNAME VICTIM_NPM_TOKEN WORM_EXFIL_DIR WORM_DRY_RUN${NC}"
+echo ""
