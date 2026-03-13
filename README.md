@@ -110,8 +110,8 @@ curl -s -H "Authorization: token ${GITHUB_PAT}" https://api.github.com/user | jq
 
 ```bash
 # Clone the repo
-git clone https://github.com/BarakAgranov/shai-hulud-2.git
-cd shai-hulud-2
+git clone git@github.com:BarakAgranov/shai-hulud-2-the-first-self-propagating-cloud-credential-worm.git
+cd shai-hulud-2-the-first-self-propagating-cloud-credential-worm
 
 # One-command setup (checks prereqs, starts Verdaccio, deploys to 3 clouds)
 ./setup.sh
